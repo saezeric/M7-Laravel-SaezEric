@@ -9,51 +9,117 @@ use App\Models\Card;
 
 class CardController extends Controller
 {
-    // 1. Listar todas las cartas
+    /**
+     * Listar todas las cartas
+     */
     public function index()
     {
-        return response()->json([
-            'message' => 'Endpoint GET /cards — listado (vacío)'
-        ], 200);
+        $cards = Card::all();
+        return response()->json(['cards' => $cards], 200);
     }
 
-    // 2. Mostrar una carta por ID
+    /**
+     * Mostrar una carta por su ID
+     */
     public function show($id)
     {
-        return response()->json([
-            'message' => "Endpoint GET /cards/{$id} — detalle (vacío)"
-        ], 200);
+        $card = Card::find($id);
+
+        if (!$card) {
+            return response()->json(['message' => 'Carta no encontrada'], 404);
+        }
+
+        return response()->json(['card' => $card], 200);
     }
 
-    // 3. Crear una nueva carta
+    /**
+     * Crear una nueva carta
+     */
     public function store(Request $request)
     {
-        return response()->json([
-            'message' => 'Endpoint POST /cards — creación (vacío)'
-        ], 201);
+        // Validaciones
+        $validator = Validator::make($request->all(), [
+            'name'      => 'required|string|max:255',
+            'image_url' => 'required|url',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        // Creación
+        $card = Card::create($request->only(['name', 'image_url']));
+
+        return response()->json(['card' => $card], 201);
     }
 
-    // 4. Actualizar completamente una carta
+    /**
+     * Actualizar completamente una carta
+     */
     public function update(Request $request, $id)
     {
-        return response()->json([
-            'message' => "Endpoint PUT /cards/{$id} — actualización completa (vacío)"
-        ], 200);
+        $card = Card::find($id);
+
+        if (!$card) {
+            return response()->json(['message' => 'Carta no encontrada'], 404);
+        }
+
+        // Validaciones (todos los campos requeridos)
+        $validator = Validator::make($request->all(), [
+            'name'      => 'required|string|max:255',
+            'image_url' => 'required|url',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        // Actualización
+        $card->update($request->only(['name', 'image_url']));
+
+        return response()->json(['card' => $card], 200);
     }
 
-    // 5. Actualizar parcialmente una carta
+    /**
+     * Actualizar parcialmente una carta
+     */
     public function updatePartial(Request $request, $id)
     {
-        return response()->json([
-            'message' => "Endpoint PATCH /cards/{$id} — actualización parcial (vacío)"
-        ], 200);
+        $card = Card::find($id);
+
+        if (!$card) {
+            return response()->json(['message' => 'Carta no encontrada'], 404);
+        }
+
+        // Validaciones (campos opcionales)
+        $validator = Validator::make($request->all(), [
+            'name'      => 'sometimes|string|max:255',
+            'image_url' => 'sometimes|url',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        // Actualización parcial
+        $card->update($request->only(['name', 'image_url']));
+
+        return response()->json(['card' => $card], 200);
     }
 
-    // 6. Eliminar una carta
+    /**
+     * Eliminar una carta
+     */
     public function destroy($id)
     {
-        return response()->json([
-            'message' => "Endpoint DELETE /cards/{$id} — borrado (vacío)"
-        ], 200);
+        $card = Card::find($id);
+
+        if (!$card) {
+            return response()->json(['message' => 'Carta no encontrada'], 404);
+        }
+
+        $card->delete();
+
+        return response()->json(['message' => 'Carta eliminada'], 200);
     }
 }
