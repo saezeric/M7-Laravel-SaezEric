@@ -13,9 +13,9 @@ Route::get('/cards/test-connection', function () {
     return Card::all();
 });
 
-Route::get('/cards',             [CardController::class, 'index']);
-Route::get('/cards/{id}',        [CardController::class, 'show']);
-Route::post('/cards',            [CardController::class, 'store']);
-Route::put('/cards/{id}',        [CardController::class, 'update']);
-Route::patch('/cards/{id}',      [CardController::class, 'updatePartial']);
-Route::delete('/cards/{id}',     [CardController::class, 'destroy']);
+Route::get('/cards',          [CardController::class, 'index']);
+Route::get('/cards/{id}',     [CardController::class, 'show']);
+Route::post('/cards',         [CardController::class, 'store']);
+Route::put('/cards/{id}',     [CardController::class, 'update']);
+Route::patch('/cards/{id}',   [CardController::class, 'updatePartial']);
+Route::delete('/cards/{id}',  [CardController::class, 'destroy']);
