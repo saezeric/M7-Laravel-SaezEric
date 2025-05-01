@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Card;
+use Illuminate\Support\Facades\Validator;
 
 
 class CardController extends Controller
@@ -64,6 +65,8 @@ class CardController extends Controller
             return response()->json(['message' => 'Carta no encontrada'], 404);
         }
 
+
+
         // Validaciones (todos los campos requeridos)
         $validator = Validator::make($request->all(), [
             'name'      => 'required|string|max:255',
@@ -77,7 +80,10 @@ class CardController extends Controller
         // Actualización
         $card->update($request->only(['name', 'image_url']));
 
-        return response()->json(['card' => $card], 200);
+        if ($card) {
+            return response()->json(['card' => $card], 200);
+        }
+
     }
 
     /**
