@@ -1,0 +1,21 @@
+[phases.setup]
+nixPkgs = ["php", "phpPackages.composer", "redis", "nodejs", "yarn"]
+
+[phases.install]
+cmds = [
+  "composer install --no-dev --optimize-autoloader",
+  "yarn install"
+]
+
+[phases.build]
+cmds = [
+  "yarn build", # o npm run build si usas Mix o Vite
+  "php artisan migrate --force",
+  "php artisan config:cache",
+  "php artisan route:cache",
+  "php artisan view:cache",
+  "php artisan storage:link"
+]
+
+[start]
+cmd = "php artisan serve --host=0.0.0.0 --port=$PORT"
