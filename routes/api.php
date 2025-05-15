@@ -7,6 +7,10 @@ use App\Http\Controllers\Api\CardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Middleware\IsUserAuth;
 use App\Http\Middleware\IsAdmin;
+use App\Http\Controllers\GameController;
+
+
+
 
 
 // Route::get('/user', function (Request $request) {
@@ -25,9 +29,16 @@ Route::post('login',     [AuthController::class, 'login']);
 Route::middleware([IsUserAuth::class])->group(function () {
     Route::post('logout',         [AuthController::class, 'logout']);
     Route::get('me',              [AuthController::class, 'getUser']);
+    // CARDS
     Route::get('/cards',          [CardController::class, 'index']);
     Route::get('/cards/{id}',     [CardController::class, 'show']);
     Route::post('cards',          [CardController::class, 'store']);
+    // GAMES
+    Route::get('/games', [GameController::class, 'index']);
+    Route::post('/games', [GameController::class, 'store']);
+    Route::put('/games/{game}/finish', [GameController::class, 'update']);
+    Route::delete('/games/{game}', [GameController::class, 'destroy']);
+    Route::get('/ranking', [GameController::class, 'ranking']);
 });
 
 // ADMIN ROUTES
@@ -42,3 +53,13 @@ Route::middleware([IsAdmin::class])->group(function () {
     Route::patch('/cards/{id}',   [CardController::class, 'updatePartial']);
     Route::delete('/cards/{id}',  [CardController::class, 'destroy']);
 });
+
+Route::middleware(['auth:api'])->group(function () {
+    Route::get('/games', [GameController::class, 'index']);
+    Route::post('/games', [GameController::class, 'store']);
+    Route::put('/games/{game}/finish', [GameController::class, 'update']);
+    Route::delete('/games/{game}', [GameController::class, 'destroy']);
+    Route::get('/ranking', [GameController::class, 'ranking']);
+    Route::get('/games/user/{id}', [GameController::class, 'getGamesByUserId']);
+});
+
