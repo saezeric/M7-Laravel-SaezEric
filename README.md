@@ -15,6 +15,11 @@ API REST creada con Laravel 11 para gestionar usuarios y mascotas. Esta API form
 
 Se usa JWT para proteger las rutas. Cuando haces login recibes un token que tienes que enviar en todas las peticiones protegidas usando el header:
 
+## Que es JWT
+
+JWT es como un carnet digital que sirve para decirle a una web quién eres y qué puedes hacer ahí. Está hecho en formato JSON y va todo junto en un mensaje que lleva una firma para que nadie lo pueda cambiar. Así, cuando entras a una web, en vez de pedirte usuario y contraseña cada vez, te dan un JWT y ya saben que eres tú y qué permisos tienes.
+
+
 ## Funcionalidades
 
 - Registro y login con token
