@@ -11,9 +11,6 @@ use App\Http\Controllers\GameController;
 use App\Http\Controllers\CategoryController;
 
 
-
-
-
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
 // })->middleware('auth:sanctum');
@@ -32,20 +29,22 @@ Route::middleware([IsUserAuth::class])->group(function () {
     Route::get('me',              [AuthController::class, 'getUser']);
     // CARDS
     Route::get('/cards',          [CardController::class, 'index']);
+    Route::get('/public-cards',   [CardController::class, 'publicCards']);
+    Route::get('/my-cards',       [CardController::class, 'myCards']);
     Route::get('/cards/{id}',     [CardController::class, 'show']);
     Route::post('cards',          [CardController::class, 'store']);
     // GAMES
-    Route::get('/games', [GameController::class, 'index']);
-    Route::post('/games', [GameController::class, 'store']);
-    Route::put('/games/{game}/finish', [GameController::class, 'update']);
-    Route::delete('/games/{game}', [GameController::class, 'destroy']);
-    Route::get('/ranking', [GameController::class, 'ranking']);
+    Route::get('/games',                    [GameController::class, 'index']);
+    Route::post('/games',                   [GameController::class, 'store']);
+    Route::put('/games/{game}/finish',      [GameController::class, 'update']);
+    Route::delete('/games/{game}',          [GameController::class, 'destroy']);
+    Route::get('/ranking',                  [GameController::class, 'ranking']);
     // CATEGORIES
-    Route::get('/categories', [CategoryController::class, 'index']);
-    Route::get('/cards/category/{categoryId}', [CardController::class, 'getByCategory']); // CARDS Y CATEGORIES
-    Route::post('/categories', [CategoryController::class, 'store']);
-    Route::put('/categories/{category}', [CategoryController::class, 'update']);
-    Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
+    Route::get('/categories',                       [CategoryController::class, 'index']);
+    Route::get('/cards/category/{categoryId}',      [CardController::class, 'getByCategory']); // CARDS Y CATEGORIES
+    Route::post('/categories',                      [CategoryController::class, 'store']);
+    Route::put('/categories/{category}',            [CategoryController::class, 'update']);
+    Route::delete('/categories/{category}',         [CategoryController::class, 'destroy']);
 });
 
 // ADMIN ROUTES

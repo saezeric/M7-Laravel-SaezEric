@@ -20,6 +20,27 @@ class CardController extends Controller
         return response()->json(['cards' => $cards], 200);
     }
 
+    public function myCards()
+    {
+        $cards = Card::where('user_id', Auth::id())->get();
+
+        return response()->json([
+            'message' => 'Les teves targetes',
+            'data' => $cards
+        ]);
+    }
+
+    public function publicCards()
+    {
+        $cards = Card::where('user_id', null)->get();
+
+        return response()->json([
+            'message' => 'Targetes públiques',
+            'data' => $cards
+        ]);
+    }
+
+
     /**
      * Mostrar una carta por su ID
      */
@@ -39,21 +60,25 @@ class CardController extends Controller
      */
     public function store(Request $request)
     {
-        // Validaciones
-        $validator = Validator::make($request->all(), [
-            'name'      => 'required|string|max:255',
-            'image_url' => 'required|url',
+        $request->validate([
+            'nombre' => 'required|string|max:100',
+            'url_imagen' => 'required|url',
+            'category_id' => 'nullable|exists:categories,id',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 400);
-        }
+        $card = Card::create([
+            'nombre' => $request->nombre,
+            'url_imagen' => $request->url_imagen,
+            'category_id' => $request->category_id,
+            'user_id' => Auth::id(), // 🔑 afegim l'usuari que l'ha creat
+        ]);
 
-        // Creación
-        $card = Card::create($request->only(['name', 'image_url']));
-
-        return response()->json(['card' => $card], 201);
+        return response()->json([
+            'message' => 'Targeta creada',
+            'data' => $card
+        ], 201);
     }
+
 
     /**
      * Actualizar completamente una carta
@@ -139,5 +164,6 @@ class CardController extends Controller
 
         return response()->json(['message' => 'Carta eliminada'], 200);
     }
+
 
 }
