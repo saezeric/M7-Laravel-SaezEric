@@ -9,4 +9,9 @@ class Card extends Model
     // public $timestamps = false;
     protected $table = 'cards';
     protected $fillable = ['name', 'image_url'];
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
 }

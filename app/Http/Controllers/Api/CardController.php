@@ -115,6 +115,16 @@ class CardController extends Controller
     }
 
     /**
+     * Obtener cartas por categoría
+     */
+    public function getByCategory($categoryId)
+    {
+        $cards = Card::where('category_id', $categoryId)->get();
+
+        return response()->json($cards);
+    }
+
+    /**
      * Eliminar una carta
      */
     public function destroy($id)
@@ -129,4 +139,5 @@ class CardController extends Controller
 
         return response()->json(['message' => 'Carta eliminada'], 200);
     }
+
 }

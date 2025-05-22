@@ -8,6 +8,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Middleware\IsUserAuth;
 use App\Http\Middleware\IsAdmin;
 use App\Http\Controllers\GameController;
+use App\Http\Controllers\CategoryController;
 
 
 
@@ -39,6 +40,12 @@ Route::middleware([IsUserAuth::class])->group(function () {
     Route::put('/games/{game}/finish', [GameController::class, 'update']);
     Route::delete('/games/{game}', [GameController::class, 'destroy']);
     Route::get('/ranking', [GameController::class, 'ranking']);
+    // CATEGORIES
+    Route::get('/categories', [CategoryController::class, 'index']);
+    Route::get('/cards/category/{categoryId}', [CardController::class, 'getByCategory']); // CARDS Y CATEGORIES
+    Route::post('/categories', [CategoryController::class, 'store']);
+    Route::put('/categories/{category}', [CategoryController::class, 'update']);
+    Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
 });
 
 // ADMIN ROUTES
