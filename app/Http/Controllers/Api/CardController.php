@@ -4,20 +4,24 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Card;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Card;
+use App\Models\Category;
+use App\Models\User;
+
+
 
 
 class CardController extends Controller
 {
     /**
-     * Listar todas las cartas
-     */
-    public function index()
+    * Mostrar todas las cartas con su usuario y categoría
+    */
+    public function all()
     {
-        $cards = Card::all();
-        return response()->json(['cards' => $cards], 200);
+        return Card::with(['user','category'])->get();
     }
 
     public function myCards()
@@ -52,7 +56,18 @@ class CardController extends Controller
             return response()->json(['message' => 'Carta no encontrada'], 404);
         }
 
-        return response()->json(['card' => $card], 200);
+        $user = Auth::user();
+
+        // Si es user, solo puede ver sus propias cartas
+        if ($user->role === 'user' && $card->user_id !== $user->id) {
+            return response()->json(['message' => 'No autoritzat per veure aquesta carta'], 403);
+        }
+
+        $message = $user->role === 'admin'
+            ? 'Carta mostrada por admin'
+            : 'Carta mostrada por el usuario';
+
+        return response()->json(['message' => $message, 'card' => $card], 200);
     }
 
     /**
@@ -60,24 +75,37 @@ class CardController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'nombre' => 'required|string|max:100',
-            'url_imagen' => 'required|url',
-            'category_id' => 'nullable|exists:categories,id',
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:100',
+            'image_url' => 'required|url',
+            'category_id' => 'required|exists:categories,id',
+            'user_id' => 'nullable|exists:users,id', // Permitir user_id nullable
         ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        // Si user_id viene en la petición, la carta es privada; si no, es pública
+        $userId = $request->has('user_id') ? $request->user_id : null;
 
         $card = Card::create([
-            'nombre' => $request->nombre,
-            'url_imagen' => $request->url_imagen,
+            'name' => $request->name,
+            'image_url' => $request->image_url,
             'category_id' => $request->category_id,
-            'user_id' => Auth::id(), // 🔑 afegim l'usuari que l'ha creat
+            'user_id' => $userId,
         ]);
 
+        $message = $userId
+            ? 'Carta privada creada'
+            : 'Carta pública creada';
+
         return response()->json([
-            'message' => 'Targeta creada',
+            'message' => $message,
             'data' => $card
         ], 201);
     }
+
 
 
     /**
@@ -86,30 +114,37 @@ class CardController extends Controller
     public function update(Request $request, $id)
     {
         $card = Card::find($id);
-
-        if (!$card) {
+        if (! $card) {
             return response()->json(['message' => 'Carta no encontrada'], 404);
         }
 
+        $user = Auth::user();
+        // Permitir solo si es admin o si es el propietario de la carta
+        if ($user->role !== 'admin' && $card->user_id !== $user->id) {
+            return response()->json(['error' => 'No autoritzat'], 403);
+        }
 
-
-        // Validaciones (todos los campos requeridos)
         $validator = Validator::make($request->all(), [
-            'name'      => 'required|string|max:255',
-            'image_url' => 'required|url',
+            'name'      => 'required|string|max:100',
+            'image_url'  => 'required|url',
+            'category_id' => 'required|exists:categories,id',
+            'user_id'     => 'nullable|exists:users,id', // Si es null, es pública
         ]);
-
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        // Actualización
-        $card->update($request->only(['name', 'image_url']));
+        $card->name = $request->name;
+        $card->image_url = $request->image_url;
+        $card->category_id = $request->category_id;
+        $card->user_id = $request->has('user_id') ? $request->user_id : null;
+        $card->save();
 
-        if ($card) {
-            return response()->json(['card' => $card], 200);
-        }
+        $message = $user->role === 'admin'
+            ? 'Carta actualizada por el administrador'
+            : 'Carta actualizada por el usuario';
 
+        return response()->json(['message' => $message, 'card' => $card], 200);
     }
 
     /**
@@ -118,33 +153,74 @@ class CardController extends Controller
     public function updatePartial(Request $request, $id)
     {
         $card = Card::find($id);
-
-        if (!$card) {
+        if (! $card) {
             return response()->json(['message' => 'Carta no encontrada'], 404);
         }
 
-        // Validaciones (campos opcionales)
-        $validator = Validator::make($request->all(), [
-            'name'      => 'sometimes|string|max:255',
-            'image_url' => 'sometimes|url',
-        ]);
+        $user = Auth::user();
+        // Permitir solo si es admin o si es el propietario de la carta
+        if ($user->role !== 'admin' && $card->user_id !== $user->id) {
+            return response()->json(['error' => 'No autoritzat'], 403);
+        }
 
+        $validator = Validator::make($request->all(), [
+            'name'      => 'sometimes|string|max:100',
+            'image_url'  => 'sometimes|url',
+            'category_id' => 'sometimes|exists:categories,id',
+            'user_id'     => 'sometimes|nullable|exists:users,id', // Si es null, es pública
+        ]);
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        // Actualización parcial
-        $card->update($request->only(['name', 'image_url']));
+        if ($request->has('name')) {
+            $card->name = $request->name;
+        }
+        if ($request->has('image_url')) {
+            $card->image_url = $request->image_url;
+        }
+        if ($request->has('category_id')) {
+            $card->category_id = $request->category_id;
+        }
+        if ($request->has('user_id')) {
+            $card->user_id = $request->user_id;
+        } elseif ($request->has('user_id') && is_null($request->user_id)) {
+            $card->user_id = null; // Hacer pública si user_id es null
+        }
+        $card->save();
 
-        return response()->json(['card' => $card], 200);
+        $message = $user->role === 'admin'
+            ? 'Carta actualizada por el administrador'
+            : 'Carta actualizada por el usuario';
+
+        return response()->json(['message' => $message, 'card' => $card], 200);
     }
+
 
     /**
      * Obtener cartas por categoría
      */
     public function getByCategory($categoryId)
     {
-        $cards = Card::where('category_id', $categoryId)->get();
+        $user = Auth::user();
+
+        if ($user && $user->role === 'admin') {
+            // El admin puede ver todas las cartas de la categoría
+            $cards = Card::where('category_id', $categoryId)->get();
+        } elseif ($user) {
+            // El usuario ve cartas públicas y sus propias cartas privadas
+            $cards = Card::where('category_id', $categoryId)
+                ->where(function ($query) use ($user) {
+                    $query->whereNull('user_id')
+                          ->orWhere('user_id', $user->id);
+                })
+                ->get();
+        } else {
+            // Invitado solo ve cartas públicas
+            $cards = Card::where('category_id', $categoryId)
+                ->whereNull('user_id')
+                ->get();
+        }
 
         return response()->json($cards);
     }
@@ -155,15 +231,24 @@ class CardController extends Controller
     public function destroy($id)
     {
         $card = Card::find($id);
-
-        if (!$card) {
+        if (! $card) {
             return response()->json(['message' => 'Carta no encontrada'], 404);
+        }
+
+        $user = Auth::user();
+
+        // Solo el usuario creador puede eliminar su carta, el admin puede eliminar cualquier carta
+        if ($user->role === 'user' && $card->user_id !== $user->id) {
+            return response()->json(['error' => 'No autoritzat'], 403);
         }
 
         $card->delete();
 
-        return response()->json(['message' => 'Carta eliminada'], 200);
-    }
+        $message = $user->role === 'admin'
+            ? 'Carta eliminada por admin'
+            : 'Carta eliminada por el usuario';
 
+        return response()->json(['message' => $message], 200);
+    }
 
 }

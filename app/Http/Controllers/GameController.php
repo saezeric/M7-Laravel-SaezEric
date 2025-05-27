@@ -37,8 +37,10 @@ public function store()
 
 public function update(Request $request, Game $game)
 {
-    // Verifiquem si l'usuari és el propietari
-    if ($game->user_id !== Auth::id()) {
+    $user = Auth::user();
+
+    // Permet si és propietari o admin
+    if ($game->user_id !== $user->id && $user->role !== 'admin') {
         return response()->json(['error' => 'No autoritzat'], 403);
     }
 
@@ -60,6 +62,7 @@ public function destroy(Game $game)
 {
     $user = Auth::user();
 
+    // Permet eliminar si és propietari o admin
     if ($user->id !== $game->user_id && $user->role !== 'admin') {
         return response()->json(['error' => 'No autoritzat'], 403);
     }
