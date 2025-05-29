@@ -11,8 +11,15 @@ class GameController extends Controller
 
 public function index()
 {
-    $userId = Auth::id(); // també pots fer auth()->user()->id
-    $games = Game::where('user_id', $userId)->get();
+    $user = Auth::user();
+
+    if ($user->role === 'admin') {
+        // Admin puede ver todas las partidas
+        $games = Game::all();
+    } else {
+        // Usuarios solo pueden ver sus propias partidas
+        $games = Game::where('user_id', $user->id)->get();
+    }
 
     return response()->json([
         'message' => 'Llistat de partides',
