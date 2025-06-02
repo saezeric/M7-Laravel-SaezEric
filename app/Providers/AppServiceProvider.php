@@ -17,6 +17,10 @@ class AppServiceProvider extends ServiceProvider
 
         // Forçar que Laravel faci servir exactament APP_URL com a base
         URL::forceRootUrl(config('app.url'));
+
+        if (str_starts_with(config('app.url'), 'https://')) {
+            URL::forceScheme('https');
+        }
     }
 }
 
